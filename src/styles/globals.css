@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    font-family: Inter, sans-serif;
+    color: #3d0d1c;
+    background: #f9f3f5;
+  }
+
+  body {
+    @apply bg-page text-brand-darker text-sm leading-6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium text-brand-darker;
+  }
+}
+
+@layer components {
+  .card-surface {
+    @apply rounded-2xl border border-muted bg-surface shadow-card;
+  }
+}
