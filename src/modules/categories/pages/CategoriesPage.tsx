@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
+import { Badge } from '@/shared/components/ui/badge';
 import {
   useAddCategoryMutation,
   useCategoriesQuery,
-  useCategoryServicesQuery,
   useDeleteCategoryMutation,
   useSetCategoryActiveMutation,
 } from '@/modules/categories/hooks/useCategoriesQuery';
@@ -22,11 +22,9 @@ export const CategoriesPage = () => {
   const addMutation = useAddCategoryMutation();
   const deleteMutation = useDeleteCategoryMutation();
   const activeMutation = useSetCategoryActiveMutation();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const servicesQuery = useCategoryServicesQuery(selectedCategoryId ?? undefined);
   const categories = categoriesQuery.data?.data ?? [];
-  const serviceTypes = servicesQuery.data?.data ?? [];
+
   const form = useForm<CategoryFormValues>({
     defaultValues: {
       nameEn: '',
@@ -34,18 +32,12 @@ export const CategoriesPage = () => {
     },
   });
 
-  useEffect(() => {
-    const firstCategory = categories[0]?.id;
-    if (!selectedCategoryId && firstCategory) {
-      setSelectedCategoryId(firstCategory);
-    }
-  }, [categories, selectedCategoryId]);
-
   return (
     <div>
       <PageHeader breadcrumb={[{ label: 'Home' }, { label: 'Categories' }]} title="Categories" />
-      <div className="grid gap-6 xl:grid-cols-[360px,1fr]">
+      <div className="max-w-xl space-y-6">
         <div className="card-surface p-5">
+          <h2 className="mb-4 text-base font-semibold text-brand-dark">Add New Category</h2>
           <form
             className="space-y-3"
             onSubmit={form.handleSubmit(async (values) => {
@@ -59,17 +51,26 @@ export const CategoriesPage = () => {
               Add Category
             </Button>
           </form>
-          <div className="mt-5 space-y-3">
+        </div>
+
+        <div className="card-surface p-5">
+          <h2 className="mb-4 text-base font-semibold text-brand-dark">Category List</h2>
+          <div className="space-y-3">
             {categories.map((category) => (
               <div
-                className={`rounded-2xl border p-4 ${selectedCategoryId === category.id ? 'border-brand bg-brand-lighter' : 'border-muted bg-white'}`}
+                className="rounded-2xl border border-muted bg-white p-4"
                 key={category.id}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <button className="text-left" onClick={() => setSelectedCategoryId(category.id)} type="button">
-                    <p className="font-medium">{category.nameEn}</p>
+                  <div>
+                    <p className="font-semibold text-brand-dark">{category.nameEn}</p>
                     <p className="text-sm text-brand-light">{category.nameAr}</p>
-                  </button>
+                    <div className="mt-2">
+                      <Badge variant={category.isActive ? 'success' : 'danger'}>
+                        {category.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => activeMutation.mutate({ categoryId: category.id, isActive: !category.isActive })}>
                       {category.isActive ? 'Disable' : 'Enable'}
@@ -79,17 +80,6 @@ export const CategoriesPage = () => {
                     </Button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="card-surface p-5">
-          <h2 className="mb-4 text-lg">Service Types</h2>
-          <div className="space-y-3">
-            {serviceTypes.map((service) => (
-              <div className="rounded-xl bg-brand-lighter p-4" key={service.id}>
-                <p className="font-medium">{service.nameEn}</p>
-                <p className="text-sm text-brand-light">{service.nameAr}</p>
               </div>
             ))}
           </div>

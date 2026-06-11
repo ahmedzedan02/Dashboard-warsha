@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Bell, Headset, LayoutDashboard, ListOrdered, LogOut, Menu, Package, ShieldAlert, Tags, UserPlus, Users, Wrench } from 'lucide-react';
+import { Bell, FileText, Headset, LayoutDashboard, ListOrdered, LogOut, Menu, Package, ShieldAlert, Tags, UserPlus, Users, Wrench } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
 import { Button } from '@/shared/components/ui/button';
@@ -10,6 +10,7 @@ import { useUiStore } from '@/modules/auth/store/uiStore';
 const navigationItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, adminOnly: true, screenName: 'dashboard' },
   { to: '/subscriptions', label: 'Subscriptions', icon: Package, adminOnly: true, screenName: 'subscriptions' },
+  { to: '/pending-contracts', label: 'Pending Contracts', icon: FileText, adminOnly: true, screenName: 'pending-contracts' },
   { to: '/payments', label: 'Payments', icon: ListOrdered, adminOnly: true, screenName: 'payments' },
   { to: '/orders', label: 'Orders', icon: ListOrdered, adminOnly: true, screenName: 'orders' },
   { to: '/support', label: 'Support Tickets', icon: Headset, adminOnly: true, screenName: 'support' },
@@ -25,6 +26,7 @@ const navigationItems = [
 const titleMap: Record<string, string> = {
   '/': 'Dashboard',
   '/subscriptions': 'Subscriptions',
+  '/pending-contracts': 'Pending Contracts',
   '/payments': 'Payments',
   '/orders': 'Orders',
   '/support': 'Support Tickets',

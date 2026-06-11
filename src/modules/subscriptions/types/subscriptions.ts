@@ -22,11 +22,15 @@ export interface SubscriptionFilters {
 
 export interface PendingContract {
   id: string;
+  providerId: string;
   providerName: string;
   phone: string;
   email: string;
   requestDate: string;
   serviceNames: string[];
+  status: string | number;
+  paymentAmount: number;
+  paymentCurrency: string;
 }
 
 export interface ApproveContractPayload {

@@ -29,11 +29,15 @@ export const getPendingContracts = async (): Promise<PendingContractsResponseDto
   const response = await axiosInstance.get<PendingContractsResponseDto>('/api/AdminApp/Subscribtion/admin/pending-contracts');
   return mapListResponse(response.data, (value) => ({
     id: pickString(value, 'id', 'paymentId', 'payment_id'),
+    providerId: pickString(value, 'providerId', 'provider_id'),
     providerName: pickString(value, 'providerName', 'provider_name'),
-    phone: pickString(value, 'phone', 'mobileno', 'mobileNo'),
-    email: pickString(value, 'email'),
+    phone: pickString(value, 'providerPhone', 'phone', 'mobileno', 'mobileNo'),
+    email: pickString(value, 'providerEmail', 'email'),
     requestDate: pickString(value, 'requestDate', 'createdAt', 'created_at'),
     serviceNames: pickArray(value, 'serviceNames', 'services').map((item) => pickString(item, 'name', 'serviceName') || String(item)),
+    status: pickString(value, 'status') !== '' ? pickString(value, 'status') : pickNumber(value, 'status'),
+    paymentAmount: pickNumber(value, 'paymentAmount', 'amount'),
+    paymentCurrency: pickString(value, 'paymentCurrency', 'currency') || 'QAR',
   }));
 };
 
@@ -46,5 +50,10 @@ export const rejectPendingContract = async (payload: RejectContractPayload): Pro
   const response = await axiosInstance.post<ResponseDTONew<null>>(`/api/AdminApp/Subscribtion/admin/reject-contract/${payload.paymentId}`, undefined, {
     params: { reason: payload.reason },
   });
+  return response.data;
+};
+
+export const verifyManualPayment = async (payload: { paymentId: string }): Promise<ResponseDTONew<null>> => {
+  const response = await axiosInstance.post<ResponseDTONew<null>>(`/api/AdminApp/Subscribtion/admin/AdminVerifyManualPayment/${payload.paymentId}`);
   return response.data;
 };

@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { DataTable } from '@/components/shared/DataTable';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { SearchBar } from '@/components/shared/SearchBar';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { providerPaginationStore } from '@/store/paginationStore';
 import { toAbsoluteAssetUrl } from '@/shared/utils/asset';
+import { useSetProviderActiveMutation, useSetProviderPaperMutation } from '@/modules/providers/hooks/useProvidersQuery';
+import { queryClient } from '@/shared/lib/queryClient';
 
 interface Provider {
   id: number;
@@ -45,6 +49,17 @@ export const ProviderListPage = () => {
   const setPage = providerPaginationStore((state) => state.setPage);
   const setLimit = providerPaginationStore((state) => state.setLimit);
   const setSearch = providerPaginationStore((state) => state.setSearch);
+
+  const activeMutation = useSetProviderActiveMutation();
+  const paperMutation = useSetProviderPaperMutation();
+
+  const [confirmAction, setConfirmAction] = useState<{
+    type: 'active' | 'paper';
+    id: string;
+    value: boolean;
+    title: string;
+    description: string;
+  } | null>(null);
 
   const query = usePaginatedQuery<Provider>(endpoint, {
     page,
@@ -95,8 +110,52 @@ export const ProviderListPage = () => {
         header: 'Paper',
         cell: ({ row }) => <Badge variant={row.original.paperok ? 'info' : 'warning'}>{row.original.paperok ? 'Verified' : 'Pending'}</Badge>,
       },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => (
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={row.original.active ? 'outline' : 'default'}
+              onClick={() => {
+                setConfirmAction({
+                  type: 'active',
+                  id: String(row.original.id),
+                  value: !row.original.active,
+                  title: row.original.active ? 'Deactivate Provider' : 'Activate Provider',
+                  description: row.original.active
+                    ? 'Are you sure you want to deactivate this provider?'
+                    : 'Are you sure you want to activate this provider?',
+                });
+              }}
+              disabled={activeMutation.isPending || paperMutation.isPending}
+            >
+              {row.original.active ? 'Deactivate' : 'Activate'}
+            </Button>
+            <Button
+              size="sm"
+              variant={row.original.paperok ? 'outline' : 'default'}
+              onClick={() => {
+                setConfirmAction({
+                  type: 'paper',
+                  id: String(row.original.id),
+                  value: !row.original.paperok,
+                  title: row.original.paperok ? 'Revoke Verification' : 'Verify Papers',
+                  description: row.original.paperok
+                    ? "Are you sure you want to revoke this provider's paper verification?"
+                    : "Are you sure you want to mark this provider's papers as verified?",
+                });
+              }}
+              disabled={activeMutation.isPending || paperMutation.isPending}
+            >
+              {row.original.paperok ? 'Revoke Papers' : 'Verify Papers'}
+            </Button>
+          </div>
+        ),
+      },
     ],
-    [],
+    [activeMutation.isPending, paperMutation.isPending],
   );
 
   return (
@@ -111,6 +170,37 @@ export const ProviderListPage = () => {
         onLimitChange={setLimit}
         onNext={() => setPage(page + 1)}
         onPrevious={() => setPage(Math.max(1, page - 1))}
+      />
+      <ConfirmDialog
+        open={Boolean(confirmAction)}
+        title={confirmAction?.title ?? ''}
+        description={confirmAction?.description ?? ''}
+        isLoading={activeMutation.isPending || paperMutation.isPending}
+        onConfirm={async () => {
+          if (!confirmAction) return;
+          const { type, id, value } = confirmAction;
+          if (type === 'active') {
+            await activeMutation.mutateAsync(
+              { providerId: id, isActive: value },
+              {
+                onSuccess: () => {
+                  queryClient.invalidateQueries({ queryKey: [endpoint] });
+                },
+              }
+            );
+          } else {
+            await paperMutation.mutateAsync(
+              { providerId: id, isPaperOk: value },
+              {
+                onSuccess: () => {
+                  queryClient.invalidateQueries({ queryKey: [endpoint] });
+                },
+              }
+            );
+          }
+          setConfirmAction(null);
+        }}
+        onCancel={() => setConfirmAction(null)}
       />
     </div>
   );

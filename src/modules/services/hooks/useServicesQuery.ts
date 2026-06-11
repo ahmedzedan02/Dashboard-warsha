@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { queryClient } from '@/shared/lib/queryClient';
-import { addService, getActiveServicePriceList, getServices, setServiceEmergency } from '@/modules/services/api/servicesApi';
+import { addService, deleteService, getActiveServicePriceList, getServices, setServiceEmergency } from '@/modules/services/api/servicesApi';
 import type { ApiError } from '@/shared/types/common';
 import type { ServiceFilters, ServiceFormValues } from '@/modules/services/types/services';
 
@@ -22,7 +22,7 @@ export const useServicePriceListQuery = () =>
 
 export const useAddServiceMutation = () =>
   useMutation({
-    mutationFn: (payload: ServiceFormValues) => addService(payload),
+    mutationFn: addService,
     onSuccess: (response) => {
       toast.success(response.message);
       queryClient.invalidateQueries({ queryKey: SERVICES_QUERY_KEY });
@@ -33,6 +33,16 @@ export const useAddServiceMutation = () =>
 export const useSetEmergencyMutation = () =>
   useMutation({
     mutationFn: ({ serviceId, isEmergency }: { serviceId: string; isEmergency: boolean }) => setServiceEmergency(serviceId, isEmergency),
+    onSuccess: (response) => {
+      toast.success(response.message);
+      queryClient.invalidateQueries({ queryKey: SERVICES_QUERY_KEY });
+    },
+    onError: (error: ApiError) => toast.error(error.message),
+  });
+
+export const useDeleteServiceMutation = () =>
+  useMutation({
+    mutationFn: deleteService,
     onSuccess: (response) => {
       toast.success(response.message);
       queryClient.invalidateQueries({ queryKey: SERVICES_QUERY_KEY });

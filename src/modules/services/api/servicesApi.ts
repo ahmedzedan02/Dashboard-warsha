@@ -117,3 +117,8 @@ export const setServiceEmergency = async (serviceId: string, isEmergency: boolea
   });
   return response.data;
 };
+
+export const deleteService = async (serviceId: string): Promise<ResponseDTONew<null>> => {
+  const response = await axiosInstance.delete<ResponseDTONew<null>>(`/api/AdminApp/Providerservicetypes/Delete/${serviceId}`);
+  return response.data;
+};

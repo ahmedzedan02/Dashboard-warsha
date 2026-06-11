@@ -9,7 +9,13 @@ import {
   useVerifyPaymentMutation,
 } from '@/modules/payments/hooks/usePaymentsQuery';
 
-vi.mock('@tanstack/react-query', () => ({ useQuery: vi.fn(), useMutation: vi.fn() }));
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: vi.fn(),
+  useMutation: vi.fn(),
+  QueryClient: vi.fn().mockImplementation(() => ({
+    invalidateQueries: vi.fn(),
+  })),
+}));
 vi.mock('react-toastify', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/modules/payments/api/paymentsApi', () => ({
   getPayments: vi.fn(),

@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { usePagination } from '@/shared/hooks/usePagination';
-import { useAddServiceMutation, useServicesQuery, useSetEmergencyMutation } from '@/modules/services/hooks/useServicesQuery';
+import { useAddServiceMutation, useDeleteServiceMutation, useServicesQuery, useSetEmergencyMutation } from '@/modules/services/hooks/useServicesQuery';
 import type { ServiceFormValues, ServiceRecord } from '@/modules/services/types/services';
 import { formatCurrency } from '@/shared/utils/format';
 import { useCategoriesQuery } from '@/modules/categories/hooks/useCategoriesQuery';
@@ -15,10 +16,14 @@ import { useCategoriesQuery } from '@/modules/categories/hooks/useCategoriesQuer
 export const ServicesPage = () => {
   const { pagination, setPage } = usePagination();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
   const query = useServicesQuery({ page: pagination.page, pageSize: pagination.pageSize });
   const categoriesQuery = useCategoriesQuery();
   const addMutation = useAddServiceMutation();
   const emergencyMutation = useSetEmergencyMutation();
+  const deleteMutation = useDeleteServiceMutation();
+
   const form = useForm<ServiceFormValues>({
     defaultValues: {
       titleEn: '',
@@ -44,9 +49,14 @@ export const ServicesPage = () => {
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => (
-          <Button size="sm" onClick={() => emergencyMutation.mutate({ serviceId: row.original.id, isEmergency: !row.original.isEmergency })}>
-            Toggle Emergency
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => emergencyMutation.mutate({ serviceId: row.original.id, isEmergency: !row.original.isEmergency })}>
+              Toggle Emergency
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => setDeleteId(row.original.id)}>
+              Delete
+            </Button>
+          </div>
         ),
       },
     ],
@@ -108,6 +118,19 @@ export const ServicesPage = () => {
           total: list?.total ?? 0,
           onPageChange: setPage,
         }}
+      />
+      <ConfirmDialog
+        title="Delete Service"
+        description="Are you sure you want to delete this service type? This action cannot be undone."
+        open={Boolean(deleteId)}
+        isLoading={deleteMutation.isPending}
+        onConfirm={async () => {
+          if (deleteId) {
+            await deleteMutation.mutateAsync(deleteId);
+            setDeleteId(null);
+          }
+        }}
+        onCancel={() => setDeleteId(null)}
       />
     </div>
   );

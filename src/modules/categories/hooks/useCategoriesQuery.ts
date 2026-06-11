@@ -30,7 +30,7 @@ export const useCategoryServicesQuery = (categoryId?: string) =>
 
 export const useAddCategoryMutation = () =>
   useMutation({
-    mutationFn: (payload: CategoryPayload) => addCategory(payload),
+    mutationFn: addCategory,
     onSuccess: (response) => {
       toast.success(response.message);
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });

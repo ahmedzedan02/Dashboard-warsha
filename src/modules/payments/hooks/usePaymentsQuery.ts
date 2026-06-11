@@ -26,7 +26,7 @@ export const useVerifyPaymentMutation = () =>
 
 export const useConfirmPaymentMutation = () =>
   useMutation({
-    mutationFn: (payload: ConfirmPaymentPayload) => confirmPayment(payload),
+    mutationFn: confirmPayment,
     onSuccess: (response) => {
       toast.success(response.message);
       queryClient.invalidateQueries({ queryKey: PAYMENTS_QUERY_KEY });

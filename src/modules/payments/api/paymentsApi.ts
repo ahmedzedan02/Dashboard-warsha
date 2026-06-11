@@ -1,7 +1,7 @@
 import { axiosInstance } from '@/shared/lib/axiosInstance';
 import type { PaymentFilters, PaymentsResponseDto, ConfirmPaymentPayload } from '@/modules/payments/types/payments';
 import type { ResponseDTONew } from '@/shared/types/common';
-import { mapPagedResponse, pickNumber, pickString } from '@/shared/lib/apiMappers';
+import { mapPagedResponse, pickBoolean, pickNumber, pickString } from '@/shared/lib/apiMappers';
 
 export const getPayments = async (params: PaymentFilters): Promise<PaymentsResponseDto> => {
   const response = await axiosInstance.get<PaymentsResponseDto>('/api/AdminApp/Admin/payments', { params });
@@ -16,6 +16,9 @@ export const getPayments = async (params: PaymentFilters): Promise<PaymentsRespo
     status: pickString(value, 'status'),
     createdAt: pickString(value, 'createdAt', 'createdDate', 'created_at'),
     paidDate: pickString(value, 'paidDate', 'paymentDate', 'paid_at') || null,
+    isServicePayment: pickBoolean(value, 'iservicePayment', 'isServicePayment', 'is_service_payment'),
+    isEmergencyPayment: pickBoolean(value, 'isEmergencyPayment', 'is_emergency_payment'),
+    canPay: pickBoolean(value, 'canPay', 'can_pay'),
   }));
 };
 

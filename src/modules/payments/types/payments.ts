@@ -11,6 +11,9 @@ export interface PaymentRecord {
   status: string;
   createdAt: string;
   paidDate?: string | null;
+  isServicePayment?: boolean | null;
+  isEmergencyPayment?: boolean | null;
+  canPay?: boolean | null;
 }
 
 export interface PaymentFilters {

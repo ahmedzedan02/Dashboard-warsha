@@ -8,21 +8,30 @@ import {
   usePendingContractsQuery,
   useRejectContractMutation,
   useSubscriptionsQuery,
+  useVerifyManualPaymentMutation,
 } from '@/modules/subscriptions/hooks/useSubscriptionsQuery';
 import {
   approvePendingContract,
   getPendingContracts,
   getSubscriptions,
   rejectPendingContract,
+  verifyManualPayment,
 } from '@/modules/subscriptions/api/subscriptionsApi';
 
-vi.mock('@tanstack/react-query', () => ({ useQuery: vi.fn(), useMutation: vi.fn() }));
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: vi.fn(),
+  useMutation: vi.fn(),
+  QueryClient: vi.fn().mockImplementation(() => ({
+    invalidateQueries: vi.fn(),
+  })),
+}));
 vi.mock('react-toastify', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/modules/subscriptions/api/subscriptionsApi', () => ({
   getSubscriptions: vi.fn(),
   getPendingContracts: vi.fn(),
   approvePendingContract: vi.fn(),
   rejectPendingContract: vi.fn(),
+  verifyManualPayment: vi.fn(),
 }));
 
 describe('subscription hooks', () => {
@@ -78,5 +87,21 @@ describe('subscription hooks', () => {
     expect(toast.success).toHaveBeenCalledWith('Rejected');
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: PENDING_CONTRACTS_QUERY_KEY });
     expect(config.mutationFn).toBe(rejectPendingContract);
+  });
+
+  it('invalidates pending contracts and subscriptions on verify manual payment success', () => {
+    let config!: Parameters<typeof useMutation>[0];
+    (useMutation as unknown as ReturnType<typeof vi.fn>).mockImplementation((value) => {
+      config = value;
+      return value;
+    });
+
+    useVerifyManualPaymentMutation();
+    config.onSuccess?.({ success: true, message: 'Verified', data: null });
+
+    expect(toast.success).toHaveBeenCalledWith('Verified');
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: PENDING_CONTRACTS_QUERY_KEY });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: SUBSCRIPTIONS_QUERY_KEY });
+    expect(config.mutationFn).toBe(verifyManualPayment);
   });
 });

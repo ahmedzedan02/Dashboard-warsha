@@ -15,6 +15,8 @@ import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { formatCurrency, formatDate } from '@/shared/utils/format';
 import { useConfirmPaymentMutation, usePaymentsQuery, useVerifyPaymentMutation } from '@/modules/payments/hooks/usePaymentsQuery';
 import type { PaymentRecord } from '@/modules/payments/types/payments';
+import { Badge } from '@/shared/components/ui/badge';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 
 const confirmSchema = z.object({
   requestRef: z.string().min(1),
@@ -28,6 +30,7 @@ export const PaymentsPage = () => {
   const verifyMutation = useVerifyPaymentMutation();
   const confirmMutation = useConfirmPaymentMutation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [verifyId, setVerifyId] = useState<string | null>(null);
   const form = useForm<z.infer<typeof confirmSchema>>({
     resolver: zodResolver(confirmSchema),
     defaultValues: { requestRef: '', transactionId: '', isManual: true },
@@ -45,7 +48,27 @@ export const PaymentsPage = () => {
   const columns = useMemo<ColumnDef<PaymentRecord>[]>(
     () => [
       { accessorKey: 'providerName', header: 'Provider' },
-      { accessorKey: 'requestRef', header: 'Request Ref' },
+      {
+        accessorKey: 'requestRef',
+        header: 'Request Ref',
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1 items-start">
+            <span>{row.original.requestRef}</span>
+            <div className="flex gap-1">
+              {row.original.isServicePayment && (
+                <Badge variant="default" className="text-[10px] py-0.5">
+                  Service
+                </Badge>
+              )}
+              {row.original.isEmergencyPayment && (
+                <Badge variant="warning" className="text-[10px] py-0.5">
+                  Emergency
+                </Badge>
+              )}
+            </div>
+          </div>
+        ),
+      },
       { accessorKey: 'transactionRef', header: 'Transaction Ref' },
       {
         accessorKey: 'amount',
@@ -59,12 +82,14 @@ export const PaymentsPage = () => {
       {
         id: 'actions',
         header: 'Actions',
-        cell: ({ row }) =>
-          row.original.status === 'Pending' ? (
-            <Button size="sm" onClick={() => verifyMutation.mutate(row.original.id)}>
+        cell: ({ row }) => {
+          const showVerify = row.original.status === 'Pending' && row.original.canPay === true && !row.original.isEmergencyPayment;
+          return showVerify ? (
+            <Button size="sm" onClick={() => setVerifyId(row.original.id)} disabled={verifyMutation.isPending}>
               Verify
             </Button>
-          ) : null,
+          ) : null;
+        },
       },
     ],
     [verifyMutation],
@@ -141,6 +166,19 @@ export const PaymentsPage = () => {
           total: list?.total ?? 0,
           onPageChange: setPage,
         }}
+      />
+      <ConfirmDialog
+        title="Verify Manual Payment"
+        description="Are you sure you want to manually verify this payment?"
+        isLoading={verifyMutation.isPending}
+        open={Boolean(verifyId)}
+        onConfirm={async () => {
+          if (verifyId) {
+            await verifyMutation.mutateAsync(verifyId);
+            setVerifyId(null);
+          }
+        }}
+        onCancel={() => setVerifyId(null)}
       />
     </div>
   );

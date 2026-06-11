@@ -1,17 +1,24 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { queryClient } from '@/shared/lib/queryClient';
-import { addService, getActiveServicePriceList } from '@/modules/services/api/servicesApi';
+import { addService, deleteService, getActiveServicePriceList } from '@/modules/services/api/servicesApi';
 import {
   SERVICE_PRICE_LIST_QUERY_KEY,
   SERVICES_QUERY_KEY,
   useAddServiceMutation,
+  useDeleteServiceMutation,
   useServicePriceListQuery,
   useServicesQuery,
   useSetEmergencyMutation,
 } from '@/modules/services/hooks/useServicesQuery';
 
-vi.mock('@tanstack/react-query', () => ({ useQuery: vi.fn(), useMutation: vi.fn() }));
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: vi.fn(),
+  useMutation: vi.fn(),
+  QueryClient: vi.fn().mockImplementation(() => ({
+    invalidateQueries: vi.fn(),
+  })),
+}));
 vi.mock('react-toastify', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/modules/services/api/servicesApi', () => ({
   getServices: vi.fn(),
@@ -19,6 +26,7 @@ vi.mock('@/modules/services/api/servicesApi', () => ({
   addService: vi.fn(),
   editService: vi.fn(),
   setServiceEmergency: vi.fn(),
+  deleteService: vi.fn(),
 }));
 
 describe('service hooks', () => {
@@ -70,6 +78,21 @@ describe('service hooks', () => {
     config.onSuccess?.({ success: true, message: 'Updated', data: null });
 
     expect(toast.success).toHaveBeenCalledWith('Updated');
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: SERVICES_QUERY_KEY });
+  });
+
+  it('invalidates service list after delete', () => {
+    let config!: Parameters<typeof useMutation>[0];
+    (useMutation as unknown as ReturnType<typeof vi.fn>).mockImplementation((value) => {
+      config = value;
+      return value;
+    });
+
+    useDeleteServiceMutation();
+    config.onSuccess?.({ success: true, message: 'Deleted', data: null });
+
+    expect(config.mutationFn).toBe(deleteService);
+    expect(toast.success).toHaveBeenCalledWith('Deleted');
     expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: SERVICES_QUERY_KEY });
   });
 });

@@ -1,14 +1,18 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { DataTable } from '@/components/shared/DataTable';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { SearchBar } from '@/components/shared/SearchBar';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { pickBoolean, pickString } from '@/shared/lib/apiMappers';
 import { userPaginationStore } from '@/store/paginationStore';
 import { toAbsoluteAssetUrl } from '@/shared/utils/asset';
+import { useSetCustomerActiveMutation } from '@/modules/customers/hooks/useCustomersQuery';
+import { queryClient } from '@/shared/lib/queryClient';
 
 interface RawCustomerCountry {
   country_name_en?: string | null;
@@ -78,6 +82,14 @@ export const UserListPage = () => {
   const setLimit = userPaginationStore((state) => state.setLimit);
   const setSearch = userPaginationStore((state) => state.setSearch);
 
+  const activeMutation = useSetCustomerActiveMutation();
+  const [confirmAction, setConfirmAction] = useState<{
+    id: string;
+    value: boolean;
+    title: string;
+    description: string;
+  } | null>(null);
+
   const query = usePaginatedQuery<RawCustomer>(endpoint, {
     page,
     limit,
@@ -120,8 +132,31 @@ export const UserListPage = () => {
         accessorKey: 'country',
         header: 'Country',
       },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => (
+          <Button
+            size="sm"
+            variant={row.original.isActive ? 'outline' : 'default'}
+            onClick={() => {
+              setConfirmAction({
+                id: row.original.id,
+                value: !row.original.isActive,
+                title: row.original.isActive ? 'Deactivate Customer' : 'Activate Customer',
+                description: row.original.isActive
+                  ? 'Are you sure you want to deactivate this customer?'
+                  : 'Are you sure you want to activate this customer?',
+              });
+            }}
+            disabled={activeMutation.isPending}
+          >
+            {row.original.isActive ? 'Deactivate' : 'Activate'}
+          </Button>
+        ),
+      },
     ],
-    [],
+    [activeMutation.isPending],
   );
 
   return (
@@ -136,6 +171,26 @@ export const UserListPage = () => {
         onLimitChange={setLimit}
         onNext={() => setPage(page + 1)}
         onPrevious={() => setPage(Math.max(1, page - 1))}
+      />
+      <ConfirmDialog
+        open={Boolean(confirmAction)}
+        title={confirmAction?.title ?? ''}
+        description={confirmAction?.description ?? ''}
+        isLoading={activeMutation.isPending}
+        onConfirm={async () => {
+          if (!confirmAction) return;
+          const { id, value } = confirmAction;
+          await activeMutation.mutateAsync(
+            { customerId: id, isActive: value },
+            {
+              onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: [endpoint] });
+              },
+            }
+          );
+          setConfirmAction(null);
+        }}
+        onCancel={() => setConfirmAction(null)}
       />
     </div>
   );
