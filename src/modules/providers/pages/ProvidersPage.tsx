@@ -7,9 +7,17 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { PageHeader } from '@/shared/components/PageHeader';
+import { Badge } from '@/shared/components/ui/badge';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { usePagination } from '@/shared/hooks/usePagination';
-import { useAddProviderMutation, useProviderDetailsQuery, useProvidersQuery, useSetProviderActiveMutation, useSetProviderPaperMutation } from '@/modules/providers/hooks/useProvidersQuery';
+import { ProviderDocumentsDialog } from '@/modules/providers/components/ProviderDocumentsDialog';
+import {
+  useAddProviderMutation,
+  useProviderDetailsQuery,
+  useProvidersQuery,
+  useSetProviderActiveMutation,
+  useSetProviderPaperMutation,
+} from '@/modules/providers/hooks/useProvidersQuery';
 import { providerFormSchema, type ProviderFormSchema } from '@/modules/providers/utils/providerSchemas';
 import type { ProviderRecord } from '@/modules/providers/types/providers';
 
@@ -17,6 +25,7 @@ export const ProvidersPage = () => {
   const { pagination, setPage, setPageSize } = usePagination();
   const [search, setSearch] = useState('');
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
+  const [selectedProviderDocuments, setSelectedProviderDocuments] = useState<{ id: string; name: string } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const debouncedSearch = useDebounce(search);
 
@@ -53,7 +62,24 @@ export const ProvidersPage = () => {
       { accessorKey: 'mobileNo', header: 'Mobile' },
       { accessorKey: 'countryName', header: 'Country' },
       { accessorKey: 'regionId', header: 'Region' },
-      { accessorKey: 'isActive', header: 'Status', cell: ({ row }) => (row.original.isActive ? 'Active' : 'Inactive') },
+      {
+        accessorKey: 'isActive',
+        header: 'Status',
+        cell: ({ row }) => (
+          <Badge variant={row.original.isActive ? 'success' : 'danger'}>
+            {row.original.isActive ? 'Active' : 'Inactive'}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: 'isPaperOk',
+        header: 'Paper Status',
+        cell: ({ row }) => (
+          <Badge variant={row.original.isPaperOk ? 'success' : 'warning'}>
+            {row.original.isPaperOk ? 'OK' : 'Pending'}
+          </Badge>
+        ),
+      },
       {
         id: 'actions',
         header: 'Actions',
@@ -62,11 +88,22 @@ export const ProvidersPage = () => {
             <Button size="sm" variant="outline" onClick={() => activeMutation.mutate({ providerId: row.original.id, isActive: !row.original.isActive })}>
               {row.original.isActive ? 'Deactivate' : 'Activate'}
             </Button>
-            <Button size="sm" onClick={() => paperMutation.mutate({ providerId: row.original.id, isPaperOk: !row.original.isPaperOk })}>
-              {row.original.isPaperOk ? 'Docs OK' : 'Approve Docs'}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => paperMutation.mutate({ providerId: row.original.id, isPaperOk: !row.original.isPaperOk })}
+            >
+              {row.original.isPaperOk ? 'Set Pending' : 'Approve Papers'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedProviderDocuments({ id: row.original.id, name: row.original.providerName })}
+            >
+              View Papers
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedProviderId(row.original.id)}>
-              View
+              View Details
             </Button>
           </div>
         ),
@@ -131,6 +168,16 @@ export const ProvidersPage = () => {
           onPageSizeChange: setPageSize,
         }}
       />
+      <ProviderDocumentsDialog
+        open={Boolean(selectedProviderDocuments)}
+        providerId={selectedProviderDocuments?.id ?? null}
+        providerName={selectedProviderDocuments?.name}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedProviderDocuments(null);
+          }
+        }}
+      />
       <Dialog open={Boolean(selectedProviderId)} onOpenChange={(open) => !open && setSelectedProviderId(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -148,6 +195,7 @@ export const ProvidersPage = () => {
                 <p>Country: {details.countryName || '--'}</p>
                 <p>Region: {details.regionId || '--'}</p>
                 <p>Status: {details.isActive ? 'Active' : 'Inactive'}</p>
+                <p>Paper Status: {details.isPaperOk ? 'OK' : 'Pending'}</p>
               </div>
               <div>
                 <h4 className="mb-2 font-medium">Subscriptions</h4>

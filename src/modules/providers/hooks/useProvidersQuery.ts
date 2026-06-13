@@ -26,6 +26,8 @@ export const useProviderDetailsQuery = (providerId?: string) =>
     queryKey: [...PROVIDER_DETAILS_QUERY_KEY, providerId],
     queryFn: () => getProviderById(providerId ?? ''),
     enabled: Boolean(providerId),
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
 export const useAddProviderMutation = () =>
@@ -33,7 +35,7 @@ export const useAddProviderMutation = () =>
     mutationFn: (payload: ProviderFormValues) => addProvider(payload),
     onSuccess: (response) => {
       toast.success(response.message);
-      queryClient.invalidateQueries({ queryKey: PROVIDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['providers'] });
     },
     onError: (error: ApiError) => toast.error(error.message),
   });
@@ -44,7 +46,7 @@ export const useEditProviderMutation = () =>
       editProvider(providerId, payload),
     onSuccess: (response) => {
       toast.success(response.message);
-      queryClient.invalidateQueries({ queryKey: PROVIDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['providers'] });
     },
     onError: (error: ApiError) => toast.error(error.message),
   });
@@ -54,7 +56,7 @@ export const useSetProviderActiveMutation = () =>
     mutationFn: ({ providerId, isActive }: { providerId: string; isActive: boolean }) => setProviderActive(providerId, isActive),
     onSuccess: (response) => {
       toast.success(response.message);
-      queryClient.invalidateQueries({ queryKey: PROVIDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['providers'] });
     },
     onError: (error: ApiError) => toast.error(error.message),
   });
@@ -64,7 +66,7 @@ export const useSetProviderPaperMutation = () =>
     mutationFn: ({ providerId, isPaperOk }: { providerId: string; isPaperOk: boolean }) => setProviderPaperOk(providerId, isPaperOk),
     onSuccess: (response) => {
       toast.success(response.message);
-      queryClient.invalidateQueries({ queryKey: PROVIDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['providers'] });
     },
     onError: (error: ApiError) => toast.error(error.message),
   });

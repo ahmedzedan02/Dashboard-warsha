@@ -8,6 +8,7 @@ import { PaginationControls } from '@/components/shared/PaginationControls';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
+import { ProviderDocumentsDialog } from '@/modules/providers/components/ProviderDocumentsDialog';
 import { providerPaginationStore } from '@/store/paginationStore';
 import { toAbsoluteAssetUrl } from '@/shared/utils/asset';
 import { useSetProviderActiveMutation, useSetProviderPaperMutation } from '@/modules/providers/hooks/useProvidersQuery';
@@ -39,6 +40,7 @@ interface Provider {
 const endpoint = '/api/AdminApp/Provider/SearchData';
 
 export const ProviderListPage = () => {
+  const [selectedProvider, setSelectedProvider] = useState<{ id: string; name: string } | null>(null);
   const page = providerPaginationStore((state) => state.page);
   const limit = providerPaginationStore((state) => state.limit);
   const search = providerPaginationStore((state) => state.search);
@@ -108,7 +110,18 @@ export const ProviderListPage = () => {
       {
         accessorKey: 'paperok',
         header: 'Paper',
-        cell: ({ row }) => <Badge variant={row.original.paperok ? 'info' : 'warning'}>{row.original.paperok ? 'Verified' : 'Pending'}</Badge>,
+        cell: ({ row }) => (
+          <div className="space-y-2">
+            <Badge variant={row.original.paperok ? 'info' : 'warning'}>{row.original.paperok ? 'Verified' : 'Pending'}</Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedProvider({ id: String(row.original.id), name: row.original.provider_name })}
+            >
+              View Papers
+            </Button>
+          </div>
+        ),
       },
       {
         id: 'actions',
@@ -201,6 +214,16 @@ export const ProviderListPage = () => {
           setConfirmAction(null);
         }}
         onCancel={() => setConfirmAction(null)}
+      />
+      <ProviderDocumentsDialog
+        open={Boolean(selectedProvider)}
+        providerId={selectedProvider?.id ?? null}
+        providerName={selectedProvider?.name}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedProvider(null);
+          }
+        }}
       />
     </div>
   );

@@ -83,9 +83,9 @@ export const getProviderById = async (providerId: string): Promise<ProviderDetai
       comment: pickString(item, 'comment', 'review'),
     })),
       documents: pickArray(record, 'documents', 'attachments').map((item) => ({
-      id: pickString(item, 'id'),
-      fileName: pickString(item, 'fileName', 'name', 'filename'),
-      url: toAbsoluteAssetUrl(pickString(item, 'url', 'path', 'fileUrl')) ?? '',
+      id: pickString(item, 'id', 'attachmentId', 'providerAttachmentId') || pickString(item, 'url', 'path', 'fileUrl', 'photoURL'),
+      fileName: pickString(item, 'fileName', 'name', 'filename', 'attachment', 'titleen', 'titlear') || pickString(item, 'url', 'path', 'fileUrl', 'photoURL'),
+      url: toAbsoluteAssetUrl(pickString(item, 'url', 'path', 'fileUrl', 'photoURL')) ?? '',
     })),
     };
   });
