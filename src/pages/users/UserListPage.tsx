@@ -64,7 +64,7 @@ const mapCustomer = (customer: RawCustomer): CustomerRow => {
     email: pickString(customer, 'email') || '-',
     mobileNo: pickString(customer, 'mobileNo', 'mobileno', 'phoneno') || '-',
     whatsapp: pickString(customer, 'whatsapp') || '-',
-    avatarUrl: toAbsoluteAssetUrl(customer.logoURL || customer.user_avater),
+    avatarUrl: toAbsoluteAssetUrl(customer.user_avater || customer.logoURL),
     isActive: pickBoolean(customer, 'isActive', 'isactive', 'active'),
     country,
   };

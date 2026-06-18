@@ -14,6 +14,8 @@ interface ProviderDocumentsDialogProps {
 }
 
 const isPdfDocument = (url: string): boolean => /\.pdf(?:$|[?#])/i.test(url);
+const isMixedContentPreview = (url: string): boolean =>
+  typeof window !== 'undefined' && window.location.protocol === 'https:' && /^http:\/\//i.test(url);
 
 const FileIcon = () => (
   <svg className="h-8 w-8 text-brand" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -108,7 +110,7 @@ export const ProviderDocumentsDialog = ({ open, providerId, providerName, onOpen
               {documents.length > 1 && (
                 <aside className="flex w-56 shrink-0 flex-col gap-1 overflow-y-auto border-r border-muted bg-white p-3">
                   {documents.map((doc, index) => {
-                    const name = doc.fileName || getFileNameFromUrl(doc.url);
+                    const name = doc.fileName.trim() || getFileNameFromUrl(doc.url);
                     const isPdf = isPdfDocument(doc.url);
                     const isImage = getAttachmentType(doc.url) === 'image';
                     const isActive = index === activeDocIndex;
@@ -142,9 +144,10 @@ export const ProviderDocumentsDialog = ({ open, providerId, providerName, onOpen
               {/* Main viewer */}
               <div className="flex flex-1 flex-col overflow-hidden">
                 {activeDoc && (() => {
-                  const docName = activeDoc.fileName || getFileNameFromUrl(activeDoc.url);
+                  const docName = activeDoc.fileName.trim() || getFileNameFromUrl(activeDoc.url);
                   const attachmentType = getAttachmentType(activeDoc.url);
                   const isPdf = isPdfDocument(activeDoc.url);
+                  const requiresDirectOpen = isMixedContentPreview(activeDoc.url);
 
                   return (
                     <>
@@ -192,7 +195,20 @@ export const ProviderDocumentsDialog = ({ open, providerId, providerName, onOpen
 
                       {/* Viewer area */}
                       <div className="flex-1 overflow-auto bg-gray-50 p-4">
-                        {attachmentType === 'image' ? (
+                        {requiresDirectOpen ? (
+                          <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                            <FileIcon />
+                            <p className="max-w-md text-sm text-brand-light">
+                              This document uses an `http` URL and cannot be previewed inside the secure dashboard.
+                              Open it directly to use the original path.
+                            </p>
+                            <Button asChild variant="default">
+                              <a href={activeDoc.url} rel="noreferrer" target="_blank">
+                                Open Original Document
+                              </a>
+                            </Button>
+                          </div>
+                        ) : attachmentType === 'image' ? (
                           <button
                             className="flex h-full w-full items-center justify-center"
                             type="button"

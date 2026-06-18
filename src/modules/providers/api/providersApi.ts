@@ -9,6 +9,29 @@ import type { ResponseDTONew } from '@/shared/types/common';
 import { mapPagedResponse, mapResponse, pickArray, pickBoolean, pickNumber, pickString } from '@/shared/lib/apiMappers';
 import { toAbsoluteAssetUrl } from '@/shared/utils/asset';
 
+const getProviderDocumentFileName = (item: unknown): string =>
+  pickString(item, 'attachment', 'attchment', 'fileName', 'name', 'filename', 'titleen', 'titlear');
+
+const getProviderDocumentUrl = (item: unknown): string => {
+  const attachmentName = getProviderDocumentFileName(item).trim();
+
+  if (attachmentName) {
+    const normalizedAttachmentPath = attachmentName.replace(/\\/g, '/').replace(/^\/+/, '');
+
+    if (/^https?:\/\//i.test(normalizedAttachmentPath)) {
+      return normalizedAttachmentPath;
+    }
+
+    const relativePath = normalizedAttachmentPath.includes('/')
+      ? normalizedAttachmentPath
+      : `downloadMaint/provider/Docs/${normalizedAttachmentPath}`;
+
+    return toAbsoluteAssetUrl(relativePath) ?? '';
+  }
+
+  return toAbsoluteAssetUrl(pickString(item, 'photoURL', 'url', 'path', 'fileUrl')) ?? '';
+};
+
 const createProviderFormData = (payload: ProviderFormValues): FormData => {
   const formData = new FormData();
   formData.append('provider_name', payload.provider_name);
@@ -84,8 +107,8 @@ export const getProviderById = async (providerId: string): Promise<ProviderDetai
     })),
       documents: pickArray(record, 'documents', 'attachments').map((item) => ({
       id: pickString(item, 'id', 'attachmentId', 'providerAttachmentId') || pickString(item, 'photoURL', 'url', 'path', 'fileUrl'),
-      fileName: pickString(item, 'attachment', 'fileName', 'name', 'filename', 'titleen', 'titlear') || pickString(item, 'photoURL', 'url', 'path', 'fileUrl'),
-      url: toAbsoluteAssetUrl(pickString(item, 'photoURL', 'url', 'path', 'fileUrl')) ?? '',
+      fileName: getProviderDocumentFileName(item) || pickString(item, 'photoURL', 'url', 'path', 'fileUrl'),
+      url: getProviderDocumentUrl(item),
     })),
     };
   });
