@@ -41,12 +41,14 @@ export interface CustomerPaymentRecord {
   id: string;
   userId: string;
   userName: string;
+  requestRef?: string;
   transactionRef: string;
   amount: number;
   currency: string;
   status: string;
   createdAt: string;
   paidDate?: string | null;
+  paymentType?: string;
 }
 
 export interface CustomerPaymentFilters {
@@ -66,12 +68,14 @@ export interface ProviderPaymentRecord {
   id: string;
   providerId: string;
   providerName: string;
+  requestRef?: string;
   transactionRef: string;
   amount: number;
   currency: string;
   status: string;
   createdAt: string;
   paidDate?: string | null;
+  paymentType?: string;
 }
 
 export interface ProviderPaymentFilters {

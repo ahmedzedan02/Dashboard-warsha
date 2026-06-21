@@ -48,12 +48,14 @@ export const getCustomerPayments = async (params: CustomerPaymentFilters): Promi
     id: pickString(value, 'id', 'paymentId', 'payment_id'),
     userId: pickString(value, 'userId', 'user_id', 'customerId'),
     userName: pickString(value, 'userName', 'customerName', 'fullName', 'name', 'user_name'),
+    requestRef: pickString(value, 'requestRef', 'requestref'),
     transactionRef: pickString(value, 'transactionRef', 'transactionId', 'transaction_id', 'reference'),
     amount: pickNumber(value, 'amount', 'total', 'price'),
     currency: pickString(value, 'currency', 'currencyCode') || 'QAR',
     status: pickString(value, 'status'),
     createdAt: pickString(value, 'createdAt', 'createdDate', 'created_at'),
     paidDate: pickString(value, 'paidDate', 'paymentDate', 'paid_at') || null,
+    paymentType: pickString(value, 'paymentType', 'payment_type'),
   }));
 };
 
@@ -65,12 +67,14 @@ export const getProviderPayments = async (params: ProviderPaymentFilters): Promi
     id: pickString(value, 'id', 'paymentId', 'payment_id'),
     providerId: pickString(value, 'providerId', 'provider_id'),
     providerName: pickString(value, 'providerName', 'provider_name', 'name', 'fullName'),
+    requestRef: pickString(value, 'requestRef', 'requestref'),
     transactionRef: pickString(value, 'transactionRef', 'transactionId', 'transaction_id', 'reference'),
     amount: pickNumber(value, 'amount', 'total', 'price'),
     currency: pickString(value, 'currency', 'currencyCode') || 'QAR',
     status: pickString(value, 'status'),
     createdAt: pickString(value, 'createdAt', 'createdDate', 'created_at'),
     paidDate: pickString(value, 'paidDate', 'paymentDate', 'paid_at') || null,
+    paymentType: pickString(value, 'paymentType', 'payment_type'),
   }));
 };
 

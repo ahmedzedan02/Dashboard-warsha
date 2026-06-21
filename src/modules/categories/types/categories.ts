@@ -2,15 +2,13 @@ import type { ResponseDTONew } from '@/shared/types/common';
 
 export interface CategoryRecord {
   id: string;
-  nameEn: string;
-  nameAr: string;
+  name: string;
   isActive: boolean;
 }
 
 export interface ServiceTypeRecord {
   id: string;
-  nameEn: string;
-  nameAr: string;
+  name: string;
 }
 
 export interface CategoryPayload {

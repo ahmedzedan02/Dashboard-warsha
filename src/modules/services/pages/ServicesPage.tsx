@@ -93,7 +93,7 @@ export const ServicesPage = () => {
                   <option value="">Select category</option>
                   {(categoriesQuery.data?.data ?? []).map((category) => (
                     <option key={category.id} value={category.id}>
-                      {category.nameEn}
+                      {category.name}
                     </option>
                   ))}
                 </select>

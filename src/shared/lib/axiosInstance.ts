@@ -45,6 +45,11 @@ axiosInstance.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  if (config.headers['lang'] === undefined) {
+    const storedLang = window.localStorage.getItem('lang') || 'en';
+    config.headers['lang'] = storedLang;
+  }
+
   return config;
 });
 

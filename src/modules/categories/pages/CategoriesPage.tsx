@@ -63,8 +63,7 @@ export const CategoriesPage = () => {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-brand-dark">{category.nameEn}</p>
-                    <p className="text-sm text-brand-light">{category.nameAr}</p>
+                    <p className="font-semibold text-brand-dark">{category.name}</p>
                     <div className="mt-2">
                       <Badge variant={category.isActive ? 'success' : 'danger'}>
                         {category.isActive ? 'Active' : 'Inactive'}
