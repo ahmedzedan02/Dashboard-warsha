@@ -8,9 +8,12 @@ import { StatusBadge } from '@/shared/components/StatusBadge';
 import { usePagination } from '@/shared/hooks/usePagination';
 import { useTableFilters } from '@/shared/hooks/useTableFilters';
 import { formatCurrency, formatDate } from '@/shared/utils/format';
+import { Button } from '@/shared/components/ui/button';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import {
   useCustomerPaymentsQuery,
   useProviderPaymentsQuery,
+  useVerifyPaymentMutation,
 } from '@/modules/payments/hooks/usePaymentsQuery';
 import type {
   CustomerPaymentRecord,
@@ -184,6 +187,9 @@ const ProviderPaymentsTab = () => {
     toDate: filters.toDate || undefined,
   });
 
+  const verifyMutation = useVerifyPaymentMutation();
+  const [verifyId, setVerifyId] = useState<string | null>(null);
+
   const columns = useMemo<ColumnDef<ProviderPaymentRecord>[]>(
     () => [
       {
@@ -229,6 +235,28 @@ const ProviderPaymentsTab = () => {
         header: 'Paid Date',
         cell: ({ row }) => formatDate(row.original.paidDate, 'dd MMM yyyy p'),
       },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+          const isPending = row.original.status?.toLowerCase() === 'pending';
+          const isServicePayment = row.original.paymentType?.toLowerCase().includes('service');
+
+          if (isPending && isServicePayment) {
+            return (
+              <Button
+                size="sm"
+                variant="default"
+                className="h-8 px-2 text-xs"
+                onClick={() => setVerifyId(row.original.id)}
+              >
+                Verify Manual
+              </Button>
+            );
+          }
+          return null;
+        },
+      },
     ],
     [],
   );
@@ -262,6 +290,19 @@ const ProviderPaymentsTab = () => {
           total: list?.total ?? 0,
           onPageChange: setPage,
         }}
+      />
+      <ConfirmDialog
+        title="Verify Manual Payment"
+        description="Are you sure you want to manually verify this payment? This will activate the service subscription for the provider."
+        isLoading={verifyMutation.isPending}
+        open={Boolean(verifyId)}
+        onConfirm={async () => {
+          if (verifyId) {
+            await verifyMutation.mutateAsync(verifyId);
+            setVerifyId(null);
+          }
+        }}
+        onCancel={() => setVerifyId(null)}
       />
     </div>
   );

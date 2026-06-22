@@ -47,6 +47,7 @@ export const useVerifyPaymentMutation = () =>
     onSuccess: (response) => {
       toast.success(response.message);
       queryClient.invalidateQueries({ queryKey: PAYMENTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: PROVIDER_PAYMENTS_QUERY_KEY });
     },
     onError: (error: ApiError) => toast.error(error.message),
   });
